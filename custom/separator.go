@@ -1,4 +1,4 @@
-package main
+package custom
 
 import (
 	"image/color"
@@ -7,24 +7,6 @@ import (
 	"fyne.io/fyne/v2/canvas"
 	"fyne.io/fyne/v2/widget"
 )
-
-type MemoryInput struct {
-	widget.Entry
-}
-
-func (s *MemoryInput) MinSize() fyne.Size {
-	return fyne.NewSize(61, s.Entry.MinSize().Height)
-}
-
-func NewMemoryInput(onSubmit func(string)) *MemoryInput {
-	s := &MemoryInput{
-		Entry: widget.Entry{
-			OnSubmitted: onSubmit,
-		},
-	}
-	s.ExtendBaseWidget(s)
-	return s
-}
 
 type CustomSeparator struct {
 	widget.BaseWidget

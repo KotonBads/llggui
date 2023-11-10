@@ -9,11 +9,11 @@ import (
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/app"
 	"fyne.io/fyne/v2/container"
-	"fyne.io/fyne/v2/layout"
 
 	"fyne.io/fyne/v2/theme"
 	"fyne.io/fyne/v2/widget"
 
+	"github.com/KotonBads/llggui/custom"
 	"github.com/pbnjay/memory"
 )
 
@@ -26,7 +26,7 @@ func main() {
 	input.SetPlaceHolder("Path to JRE")
 
 	memSlider := widget.NewSlider(0, float64(memory.TotalMemory()/1024/1024))
-	mem := NewMemoryInput(func(s string) {
+	mem := custom.NewMemoryInput(func(s string) {
 		e, _ := strconv.Atoi(s)
 		memSlider.Value = float64(e)
 	})
@@ -52,7 +52,7 @@ func main() {
 			"Settings",
 			theme.SettingsIcon(),
 			container.NewVBox(
-				NewCustomSeparator(
+				custom.NewCustomSeparator(
 					color.RGBA{
 						22,
 						22,
@@ -69,21 +69,9 @@ func main() {
 					},
 				),
 
-				container.NewBorder(
-					nil,
-					nil,
-					layout.NewSpacer(),
-					layout.NewSpacer(),
-					container.NewBorder(
-						nil,
-						nil,
-						nil,
-						button,
-						input,
-					),
-				),
+				custom.NewJreContainer(input, button),
 
-				NewCustomSeparator(
+				custom.NewCustomSeparator(
 					color.RGBA{
 						22,
 						22,
@@ -99,21 +87,10 @@ func main() {
 						Bold: true,
 					},
 				),
-				container.NewBorder(
-					nil,
-					nil,
-					layout.NewSpacer(),
-					layout.NewSpacer(),
-					container.NewBorder(
-						nil,
-						nil,
-						widget.NewLabel("Xmx"),
-						container.NewHBox(
-							mem,
-							widget.NewLabel("MiB"),
-						),
-						memSlider,
-					),
+				custom.NewMemoryContainer(
+					widget.NewLabel("Xmx"),
+					mem,
+					memSlider,
 				),
 			),
 		),
