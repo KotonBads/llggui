@@ -3,17 +3,46 @@ package main
 import (
 	"github.com/andlabs/ui"
 	"github.com/pbnjay/memory"
+	"github.com/KotonBads/llggui/utils"
 )
 
 var MAX_MEMORY_MIB = int(memory.TotalMemory() / 1024 / 1024)
 
 func OtherSettings(window *ui.Window) ui.Control {
+	// set boxes
 	form := ui.NewForm()
 	form.SetPadded(true)
 
+	wdbox := ui.NewHorizontalBox()
+	wdbox.SetPadded(true)
+
+	gdbox := ui.NewHorizontalBox()
+	gdbox.SetPadded(true)
+
+	pjbox := ui.NewHorizontalBox()
+	pjbox.SetPadded(true)
+
+	// vars
 	agents := ui.NewMultilineEntry()
 	vars := ui.NewMultilineEntry()
+	workingDir := ui.NewEntry()
+	gameDir := ui.NewEntry()
+	preJava := ui.NewEntry()
 
+	// entries with pickers
+	wdbox.Append(workingDir, true)
+	wdbox.Append(utils.PickerButton(workingDir), false)
+
+	gdbox.Append(gameDir, true)
+	gdbox.Append(utils.PickerButton(gameDir), false)
+
+	pjbox.Append(preJava, true)
+	pjbox.Append(utils.PickerButton(preJava), false)
+
+	// append controls
+	form.Append("Game Directory", gdbox, false)
+	form.Append("Working Directory", wdbox, false)
+	form.Append("Pre-Java", pjbox, false)
 	form.Append("Java Agents", agents, true)
 	form.Append("Environment Variables", vars, true)
 
