@@ -7,6 +7,19 @@ import (
 
 var MAX_MEMORY_MIB = int(memory.TotalMemory() / 1024 / 1024)
 
+func OtherSettings(window *ui.Window) ui.Control {
+	form := ui.NewForm()
+	form.SetPadded(true)
+
+	agents := ui.NewMultilineEntry()
+	vars := ui.NewMultilineEntry()
+
+	form.Append("Java Agents", agents, true)
+	form.Append("Environment Variables", vars, true)
+
+	return form
+}
+
 func MemorySettings(window *ui.Window) ui.Control {
 	// setup form
 	form := ui.NewForm()
@@ -78,8 +91,10 @@ func setupUI() {
 
 	tab.Append("JRE", JRESettings(app))
 	tab.Append("Memory", MemorySettings(app))
+	tab.Append("Others", OtherSettings(app))
 	tab.SetMargined(0, true)
 	tab.SetMargined(1, true)
+	tab.SetMargined(2, true)
 
 	app.Show()
 }
