@@ -4,9 +4,7 @@ import (
 	"fmt"
 	"image/color"
 	"os"
-	"strconv"
 
-	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/app"
 	"fyne.io/fyne/v2/container"
 
@@ -14,39 +12,38 @@ import (
 	"fyne.io/fyne/v2/widget"
 
 	"github.com/KotonBads/llggui/custom"
+	"github.com/KotonBads/llggui/pages"
 	"github.com/pbnjay/memory"
 )
+
+var MAX_MEMORY_MIB uint64 = memory.TotalMemory() / 1024 / 1024
 
 func main() {
 	os.Setenv("FYNE_THEME", "dark")
 	myApp := app.New()
 	myWindow := myApp.NewWindow("Launcher test")
 
-	input := widget.NewEntry()
-	input.SetPlaceHolder("Path to JRE")
+	var jrePath string
+	var Xmx, Xms, Xmn, Xss int
 
-	memSlider := widget.NewSlider(0, float64(memory.TotalMemory()/1024/1024))
-	mem := custom.NewMemoryInput(func(s string) {
-		e, _ := strconv.Atoi(s)
-		memSlider.Value = float64(e)
-	})
-	memSlider.Step = 2
-	memSlider.OnChanged = func(f float64) {
-		mem.SetText(fmt.Sprint(f))
-	}
-
-	button := widget.NewButtonWithIcon(
-		"Open File",
-		theme.FileApplicationIcon(),
-		func() {
-			FilePickerPath(&myWindow, input)
-		})
+	jreLabel := widget.NewLabel(jrePath)
+	xmxLabel := widget.NewLabel(fmt.Sprint(Xmx))
+	xmsLabel := widget.NewLabel(fmt.Sprint(Xms))
+	xmnLabel := widget.NewLabel(fmt.Sprint(Xmn))
+	xssLabel := widget.NewLabel(fmt.Sprint(Xss))
 
 	tabs := container.NewAppTabs(
 		container.NewTabItemWithIcon(
 			"Home",
 			theme.HomeIcon(),
-			widget.NewLabel("Home tab"),
+			container.NewVBox(
+				widget.NewLabel("Home tab"),
+				jreLabel,
+				xmxLabel,
+				xmsLabel,
+				xmnLabel,
+				xssLabel,
+			),
 		),
 		container.NewTabItemWithIcon(
 			"Settings",
@@ -61,15 +58,8 @@ func main() {
 					},
 					15,
 				),
-				widget.NewLabelWithStyle(
-					"JRE",
-					fyne.TextAlignLeading,
-					fyne.TextStyle{
-						Bold: true,
-					},
-				),
 
-				custom.NewJreContainer(input, button),
+				pages.JRE(myWindow, &jrePath),
 
 				custom.NewCustomSeparator(
 					color.RGBA{
@@ -80,18 +70,7 @@ func main() {
 					},
 					15,
 				),
-				widget.NewLabelWithStyle(
-					"Memory",
-					fyne.TextAlignLeading,
-					fyne.TextStyle{
-						Bold: true,
-					},
-				),
-				custom.NewMemoryContainer(
-					widget.NewLabel("Xmx"),
-					mem,
-					memSlider,
-				),
+				pages.Memory(myWindow, &Xmx, &Xms, &Xmn, &Xss),
 			),
 		),
 
@@ -99,6 +78,13 @@ func main() {
 	)
 
 	tabs.SetTabLocation(container.TabLocationTop)
+	tabs.OnSelected = func(ti *container.TabItem) {
+		jreLabel.SetText(jrePath)
+		xmxLabel.SetText(fmt.Sprint(Xmx))
+		xmsLabel.SetText(fmt.Sprint(Xms))
+		xmnLabel.SetText(fmt.Sprint(Xmn))
+		xssLabel.SetText(fmt.Sprint(Xss))
+	}
 
 	myWindow.SetContent(tabs)
 	myWindow.ShowAndRun()
