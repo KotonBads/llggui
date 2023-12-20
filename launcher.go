@@ -36,14 +36,7 @@ func main() {
 		container.NewTabItemWithIcon(
 			"Home",
 			theme.HomeIcon(),
-			container.NewVBox(
-				widget.NewLabel("Home tab"),
-				jreLabel,
-				xmxLabel,
-				xmsLabel,
-				xmnLabel,
-				xssLabel,
-			),
+			pages.Overview(jreLabel, xmxLabel, xmsLabel, xmnLabel, xssLabel),
 		),
 		container.NewTabItemWithIcon(
 			"Settings",

@@ -18,7 +18,11 @@ var MAX_MEMORY_MIB uint64 = memory.TotalMemory() / 1024 / 1024
 
 func JRE(window fyne.Window, jrePath *string) fyne.CanvasObject {
 	input := widget.NewEntry()
+	input.SetText(*jrePath)
 	input.SetPlaceHolder("Path to JRE")
+	input.OnChanged = func(s string) {
+		*jrePath = input.Text
+	}
 	button := widget.NewButtonWithIcon(
 		"Open File",
 		theme.FileApplicationIcon(),
@@ -26,9 +30,6 @@ func JRE(window fyne.Window, jrePath *string) fyne.CanvasObject {
 			utils.FilePickerPath(&window, input)
 		},
 	)
-	input.OnChanged = func(s string) {
-		*jrePath = input.Text
-	}
 
 	return container.NewVBox(
 		widget.NewLabelWithStyle(
@@ -44,6 +45,7 @@ func JRE(window fyne.Window, jrePath *string) fyne.CanvasObject {
 
 func Memory(window fyne.Window, Xmx, Xms, Xmn, Xss *int) fyne.CanvasObject {
 	XmxSlider := widget.NewSlider(0, float64(MAX_MEMORY_MIB))
+	XmxSlider.SetValue(float64(*Xmx))
 	XmxInput := custom.NewMemoryInput(func(s string) {
 		e, _ := strconv.Atoi(s)
 		XmxSlider.SetValue(float64(e))
@@ -55,6 +57,7 @@ func Memory(window fyne.Window, Xmx, Xms, Xmn, Xss *int) fyne.CanvasObject {
 	XmxSlider.Step = 2
 
 	XmsSlider := widget.NewSlider(0, float64(MAX_MEMORY_MIB))
+	XmsSlider.SetValue(float64(*Xms))
 	XmsInput := custom.NewMemoryInput(func(s string) {
 		e, _ := strconv.Atoi(s)
 		XmsSlider.SetValue(float64(e))
@@ -66,6 +69,7 @@ func Memory(window fyne.Window, Xmx, Xms, Xmn, Xss *int) fyne.CanvasObject {
 	XmsSlider.Step = 2
 
 	XmnSlider := widget.NewSlider(0, float64(MAX_MEMORY_MIB))
+	XmnSlider.SetValue(float64(*Xmn))
 	XmnInput := custom.NewMemoryInput(func(s string) {
 		e, _ := strconv.Atoi(s)
 		XmnSlider.SetValue(float64(e))
@@ -77,6 +81,7 @@ func Memory(window fyne.Window, Xmx, Xms, Xmn, Xss *int) fyne.CanvasObject {
 	XmnSlider.Step = 2
 
 	XssSlider := widget.NewSlider(0, float64(MAX_MEMORY_MIB))
+	XssSlider.SetValue(float64(*Xss))
 	XssInput := custom.NewMemoryInput(func(s string) {
 		e, _ := strconv.Atoi(s)
 		XssSlider.SetValue(float64(e))
