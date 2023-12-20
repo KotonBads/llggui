@@ -5,9 +5,9 @@ import (
 	"github.com/pbnjay/memory"
 )
 
-var MAX_MEMORY_MIB = int(memory.TotalMemory()/1024/1024)
+var MAX_MEMORY_MIB = int(memory.TotalMemory() / 1024 / 1024)
 
-func setMemory(window *ui.Window) ui.Control {
+func MemorySettings(window *ui.Window) ui.Control {
 	// setup form
 	form := ui.NewForm()
 	form.SetPadded(true)
@@ -19,42 +19,49 @@ func setMemory(window *ui.Window) ui.Control {
 	xssSlider := ui.NewSlider(0, MAX_MEMORY_MIB)
 
 	// append controls
-	form.Append("Xmx", xmxSlider, true)
-	form.Append("Xms", xmsSlider, true)
-	form.Append("Xmn", xmnSlider, true)
-	form.Append("Xss", xssSlider, true)
+	form.Append("Xmx", xmxSlider, false)
+	form.Append("Xms", xmsSlider, false)
+	form.Append("Xmn", xmnSlider, false)
+	form.Append("Xss", xssSlider, false)
 
 	return form
 }
 
-func jrePicker(window *ui.Window) ui.Control {
+func JRESettings(window *ui.Window) ui.Control {
 	// setup boxes
-	vbox := ui.NewVerticalBox()
-	vbox.SetPadded(true)
-
 	hbox := ui.NewHorizontalBox()
 	hbox.SetPadded(true)
 
-	vbox.Append(hbox, false)
+	form := ui.NewForm()
+	form.SetPadded(true)
 
-	// input and button
-	input := ui.NewEntry()
-	button := ui.NewButton("Open")
+	form.Append("JRE", hbox, false)
 
-	button.OnClicked(func(b *ui.Button) {
+	// jrePath and button
+	jrePath := ui.NewEntry()
+	openPicker := ui.NewButton("Open")
+
+	openPicker.OnClicked(func(b *ui.Button) {
 		if filepath := ui.OpenFile(window); filepath != "" {
-			input.SetText(filepath)
+			jrePath.SetText(filepath)
 		}
 	})
 
-	hbox.Append(input, true)
-	hbox.Append(button, false)
+	hbox.Append(jrePath, true)
+	hbox.Append(openPicker, false)
 
-	return vbox
+	// jvm args
+	jvmArgs := ui.NewMultilineEntry()
+
+	form.Append("JVM Arguments", jvmArgs, true)
+
+	return form
 }
 
 func setupUI() {
 	app := ui.NewWindow("Test Launcher", 640, 480, true)
+	app.SetMargined(true)
+	app.SetBorderless(true)
 
 	// handle app closing
 	app.OnClosing(func(w *ui.Window) bool {
@@ -69,14 +76,10 @@ func setupUI() {
 	tab := ui.NewTab()
 	app.SetChild(tab)
 
-	vbox := ui.NewVerticalBox()
-	vbox.SetPadded(true)
-
-	vbox.Append(jrePicker(app), false)
-	vbox.Append(setMemory(app), false)
-
-	tab.Append("Settings", vbox)
+	tab.Append("JRE", JRESettings(app))
+	tab.Append("Memory", MemorySettings(app))
 	tab.SetMargined(0, true)
+	tab.SetMargined(1, true)
 
 	app.Show()
 }
