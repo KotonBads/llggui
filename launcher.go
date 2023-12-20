@@ -1,9 +1,9 @@
 package main
 
 import (
+	"github.com/KotonBads/llggui/utils"
 	"github.com/andlabs/ui"
 	"github.com/pbnjay/memory"
-	"github.com/KotonBads/llggui/utils"
 )
 
 var MAX_MEMORY_MIB = int(memory.TotalMemory() / 1024 / 1024)
@@ -31,13 +31,13 @@ func OtherSettings(window *ui.Window) ui.Control {
 
 	// entries with pickers
 	wdbox.Append(workingDir, true)
-	wdbox.Append(utils.PickerButton(workingDir), false)
+	wdbox.Append(utils.PickerButton(window, workingDir), false)
 
 	gdbox.Append(gameDir, true)
-	gdbox.Append(utils.PickerButton(gameDir), false)
+	gdbox.Append(utils.PickerButton(window, gameDir), false)
 
 	pjbox.Append(preJava, true)
-	pjbox.Append(utils.PickerButton(preJava), false)
+	pjbox.Append(utils.PickerButton(window, preJava), false)
 
 	// append controls
 	form.Append("Game Directory", gdbox, false)
