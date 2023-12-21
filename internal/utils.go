@@ -23,6 +23,24 @@ func (config *ConfigFile) LoadConfig(path string) {
 	}
 }
 
+func (config *ConfigFile) SaveConfig(path string) {
+	// read config file
+	configFile, err := os.OpenFile(path, os.O_CREATE|os.O_WRONLY, 0644)
+	if err != nil {
+		log.Fatalf("[ERROR] Could not read config file: %s", err)
+	}
+
+	// write to file
+	jsonData, err := json.MarshalIndent(config, "", "    ")
+	if err != nil {
+		log.Fatalf("[ERROR] Could not marshal config: %s", err)
+	}
+
+	if _, err := configFile.Write(jsonData); err != nil {
+		log.Fatalf("[ERROR] Could not write to config file: %s", err)
+	}
+}
+
 func CorrectedArch() string {
 	switch runtime.GOARCH {
 	case "amd64":
