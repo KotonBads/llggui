@@ -1,0 +1,7 @@
+temp/*
+tests/*
+launcherlogs/*
+go.sum
+.ichor/*
+logs/*
+config.json
