@@ -1,6 +1,8 @@
 package utils
 
-import "github.com/andlabs/ui"
+import (
+	"github.com/andlabs/ui"
+)
 
 func PickerButton(window *ui.Window, entry *ui.Entry) ui.Control {
 	button := ui.NewButton("Open")
