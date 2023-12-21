@@ -1,6 +1,10 @@
 package main
 
 import (
+	"fmt"
+	"strings"
+
+	"github.com/KotonBads/llggui/internal"
 	"github.com/KotonBads/llggui/utils"
 	"github.com/andlabs/ui"
 	"github.com/pbnjay/memory"
@@ -37,7 +41,7 @@ var (
 
 	// other settings
 	agents     *ui.MultilineEntry
-	vars       *ui.MultilineEntry
+	envVars    *ui.MultilineEntry
 	workingDir *ui.Entry
 	gameDir    *ui.Entry
 	preJava    *ui.Entry
@@ -54,8 +58,12 @@ var (
 	jvmArgs *ui.MultilineEntry
 
 	// home page
-	verList *ui.Combobox
-	modList *ui.Combobox
+	verList    *ui.Combobox
+	modList    *ui.Combobox
+	configFile *ui.Entry
+
+	// config file
+	CONFIG_FILE = internal.ConfigFile{}
 )
 
 func OtherSettings(window *ui.Window) ui.Control {
@@ -74,7 +82,7 @@ func OtherSettings(window *ui.Window) ui.Control {
 
 	// vars
 	agents = ui.NewMultilineEntry()
-	vars = ui.NewMultilineEntry()
+	envVars = ui.NewMultilineEntry()
 	workingDir = ui.NewEntry()
 	gameDir = ui.NewEntry()
 	preJava = ui.NewEntry()
@@ -94,7 +102,7 @@ func OtherSettings(window *ui.Window) ui.Control {
 	form.Append("Working Directory", wdbox, false)
 	form.Append("Pre-Java", pjbox, false)
 	form.Append("Java Agents", agents, true)
-	form.Append("Environment Variables", vars, true)
+	form.Append("Environment Variables", envVars, true)
 
 	return form
 }
@@ -148,11 +156,36 @@ func HomePage(window *ui.Window) ui.Control {
 	form := ui.NewForm()
 	form.SetPadded(true)
 
+	cfbox := ui.NewHorizontalBox()
+	cfbox.SetPadded(true)
+
 	verList = ui.NewCombobox()
 	modList = ui.NewCombobox()
+	configFile = ui.NewEntry()
+	loadcfg := ui.NewButton("Load")
+	savecfg := ui.NewButton("Save")
+
+	loadcfg.OnClicked(
+		func(b *ui.Button) {
+			CONFIG_FILE.LoadConfig(configFile.Text())
+			go loadConfig()
+		},
+	)
+
+	savecfg.OnClicked(
+		func(b *ui.Button) {
+			go saveConfig()
+		},
+	)
+
+	cfbox.Append(configFile, true)
+	cfbox.Append(savecfg, false)
+	cfbox.Append(loadcfg, false)
+	cfbox.Append(utils.PickerButton(window, configFile), false)
 
 	form.Append("Version", verList, false)
 	form.Append("Module", modList, false)
+	form.Append("Config File", cfbox, false)
 
 	return form
 }
@@ -187,10 +220,10 @@ func setupUI() {
 	app.Show()
 
 	// update values in another goroutine
-	go update()
+	go updateHome()
 }
 
-func update() {
+func updateHome() {
 	ui.QueueMain(
 		func() {
 			for _, val := range LC_VERSIONS {
@@ -204,6 +237,61 @@ func update() {
 			for _, val := range LC_MODULES {
 				modList.Append(val)
 			}
+		},
+	)
+}
+
+func loadConfig() {
+	ui.QueueMain(
+		func() {
+			// jre settings
+			jrePath.SetText(CONFIG_FILE.JRE)
+			jvmArgs.SetText(strings.Join(CONFIG_FILE.JVMArgs, "\n"))
+
+			// memory settings
+			xmxSlider.SetValue(CONFIG_FILE.Memory.Xmx)
+			xmsSlider.SetValue(CONFIG_FILE.Memory.Xms)
+			xmnSlider.SetValue(CONFIG_FILE.Memory.Xmn)
+			xssSlider.SetValue(CONFIG_FILE.Memory.Xss)
+
+			// other settings
+			workingDir.SetText(CONFIG_FILE.WorkingDirectory)
+			gameDir.SetText(CONFIG_FILE.GameDirectory)
+			agents.SetText(strings.Join(CONFIG_FILE.JavaAgents, "\n"))
+			preJava.SetText(CONFIG_FILE.PreJava)
+
+			var _env []string
+
+			for _, val := range CONFIG_FILE.EnvVars {
+				_env = append(_env, fmt.Sprintf("%s = %s", val.Key, val.Value))
+			}
+
+			envVars.SetReadOnly(true)
+			envVars.SetText(strings.Join(_env, "\n"))
+		},
+	)
+}
+
+func saveConfig() {
+	ui.QueueMain(
+		func() {
+			// jre settings
+			CONFIG_FILE.JRE = jrePath.Text()
+			CONFIG_FILE.JVMArgs = strings.Split(jvmArgs.Text(), "\n")
+
+			// memory settings
+			CONFIG_FILE.Memory.Xmx = xmxSlider.Value()
+			CONFIG_FILE.Memory.Xms = xmsSlider.Value()
+			CONFIG_FILE.Memory.Xmn = xmnSlider.Value()
+			CONFIG_FILE.Memory.Xss = xssSlider.Value()
+
+			// other settings
+			CONFIG_FILE.WorkingDirectory = workingDir.Text()
+			CONFIG_FILE.GameDirectory = gameDir.Text()
+			CONFIG_FILE.JavaAgents = strings.Split(agents.Text(), "\n")
+			CONFIG_FILE.PreJava = preJava.Text()
+
+			CONFIG_FILE.SaveConfig(configFile.Text())
 		},
 	)
 }
