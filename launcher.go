@@ -40,11 +40,11 @@ var (
 	}
 
 	// other settings
-	agents     *ui.MultilineEntry
-	envVars    *ui.MultilineEntry
-	workingDir *ui.Entry
-	gameDir    *ui.Entry
-	preJava    *ui.Entry
+	agentEntry *ui.MultilineEntry
+	envEntry   *ui.MultilineEntry
+	wdEntry    *ui.Entry
+	gdEntry    *ui.Entry
+	pjEntry    *ui.Entry
 
 	// memory settings
 	MAX_MEMORY_MIB = int(memory.TotalMemory() / 1024 / 1024)
@@ -54,13 +54,15 @@ var (
 	xssSlider      *ui.Slider
 
 	// jre settings
-	jrePath *ui.Entry
-	jvmArgs *ui.MultilineEntry
+	jreEntry   *ui.Entry
+	jargsEntry *ui.MultilineEntry
 
 	// home page
-	verList    *ui.Combobox
-	modList    *ui.Combobox
-	configFile *ui.Entry
+	verList     *ui.Combobox
+	modList     *ui.Combobox
+	widthEntry  *ui.Entry
+	heightEntry *ui.Entry
+	cfgEntry    *ui.Entry
 
 	// config file
 	CONFIG_FILE = internal.ConfigFile{}
@@ -81,36 +83,41 @@ func OtherSettings(window *ui.Window) ui.Control {
 	pjbox.SetPadded(true)
 
 	// vars
-	agents = ui.NewMultilineEntry()
-	envVars = ui.NewMultilineEntry()
-	workingDir = ui.NewEntry()
-	gameDir = ui.NewEntry()
-	preJava = ui.NewEntry()
+	agentEntry = ui.NewMultilineEntry()
+	envEntry = ui.NewMultilineEntry()
+	wdEntry = ui.NewEntry()
+	gdEntry = ui.NewEntry()
+	pjEntry = ui.NewEntry()
 
 	// entries with pickers
-	wdbox.Append(workingDir, true)
-	wdbox.Append(utils.PickerButton(window, workingDir), false)
+	wdbox.Append(wdEntry, true)
+	wdbox.Append(utils.PickerButton(window, wdEntry), false)
 
-	gdbox.Append(gameDir, true)
-	gdbox.Append(utils.PickerButton(window, gameDir), false)
+	gdbox.Append(gdEntry, true)
+	gdbox.Append(utils.PickerButton(window, gdEntry), false)
 
-	pjbox.Append(preJava, true)
-	pjbox.Append(utils.PickerButton(window, preJava), false)
+	pjbox.Append(pjEntry, true)
+	pjbox.Append(utils.PickerButton(window, pjEntry), false)
 
 	// append controls
 	form.Append("Game Directory", gdbox, false)
 	form.Append("Working Directory", wdbox, false)
 	form.Append("Pre-Java", pjbox, false)
-	form.Append("Java Agents", agents, true)
-	form.Append("Environment Variables", envVars, true)
+	form.Append("Java Agents", agentEntry, true)
+	form.Append("Environment Variables", envEntry, true)
 
 	return form
 }
 
 func MemorySettings(window *ui.Window) ui.Control {
 	// setup form
+	group := ui.NewGroup("Memory Allocations")
+	group.SetMargined(true)
+
 	form := ui.NewForm()
 	form.SetPadded(true)
+
+	group.SetChild(form)
 
 	// setup vars
 	xmxSlider = ui.NewSlider(0, MAX_MEMORY_MIB)
@@ -124,50 +131,96 @@ func MemorySettings(window *ui.Window) ui.Control {
 	form.Append("Xmn", xmnSlider, false)
 	form.Append("Xss", xssSlider, false)
 
-	return form
+	return group
 }
 
 func JRESettings(window *ui.Window) ui.Control {
 	// setup boxes
+	group := ui.NewGroup("Java Settings")
+	group.SetMargined(true)
+
 	hbox := ui.NewHorizontalBox()
 	hbox.SetPadded(true)
 
 	form := ui.NewForm()
 	form.SetPadded(true)
 
-	form.Append("JRE", hbox, false)
+	group.SetChild(form)
+
+	form.Append("JRE Path", hbox, false)
 
 	// jrePath and button
-	jrePath = ui.NewEntry()
-	openPicker := utils.PickerButton(window, jrePath)
+	jreEntry = ui.NewEntry()
+	openPicker := utils.PickerButton(window, jreEntry)
 
-	hbox.Append(jrePath, true)
+	hbox.Append(jreEntry, true)
 	hbox.Append(openPicker, false)
 
 	// jvm args
-	jvmArgs = ui.NewMultilineEntry()
+	jargsEntry = ui.NewMultilineEntry()
 
-	form.Append("JVM Arguments", jvmArgs, true)
+	form.Append("Arguments", jargsEntry, true)
 
-	return form
+	return group
 }
 
 func HomePage(window *ui.Window) ui.Control {
-	form := ui.NewForm()
-	form.SetPadded(true)
+	// main boxes
+	vbox := ui.NewVerticalBox()
+	vbox.SetPadded(true)
+
+	hbox := ui.NewHorizontalBox()
+	hbox.SetPadded(true)
+
+	// version & module
+	vmgroup := ui.NewGroup("Version & Module")
+	vmgroup.SetMargined(true)
+
+	vmform := ui.NewForm()
+	vmform.SetPadded(true)
+
+	vmgroup.SetChild(vmform)
+
+	verList = ui.NewCombobox()
+	modList = ui.NewCombobox()
+
+	vmform.Append("Version", verList, false)
+	vmform.Append("Module", modList, false)
+
+	// display
+	dgroup := ui.NewGroup("Display")
+	dgroup.SetMargined(true)
+
+	dform := ui.NewForm()
+	dform.SetPadded(true)
+
+	dgroup.SetChild(dform)
+
+	widthEntry = ui.NewEntry()
+	heightEntry = ui.NewEntry()
+
+	dform.Append("Width", widthEntry, false)
+	dform.Append("Height", heightEntry, false)
+
+	// config
+	cfgroup := ui.NewGroup("Config File")
+	cfgroup.SetMargined(true)
+
+	cfform := ui.NewForm()
+	cfform.SetPadded(true)
 
 	cfbox := ui.NewHorizontalBox()
 	cfbox.SetPadded(true)
 
-	verList = ui.NewCombobox()
-	modList = ui.NewCombobox()
-	configFile = ui.NewEntry()
+	cfgroup.SetChild(cfform)
+
+	cfgEntry = ui.NewEntry()
 	loadcfg := ui.NewButton("Load")
 	savecfg := ui.NewButton("Save")
 
 	loadcfg.OnClicked(
 		func(b *ui.Button) {
-			CONFIG_FILE.LoadConfig(configFile.Text())
+			CONFIG_FILE.LoadConfig(cfgEntry.Text())
 			go loadConfig()
 		},
 	)
@@ -178,16 +231,30 @@ func HomePage(window *ui.Window) ui.Control {
 		},
 	)
 
-	cfbox.Append(configFile, true)
+	cfbox.Append(cfgEntry, true)
 	cfbox.Append(savecfg, false)
 	cfbox.Append(loadcfg, false)
-	cfbox.Append(utils.PickerButton(window, configFile), false)
+	cfbox.Append(utils.PickerButton(window, cfgEntry), false)
 
-	form.Append("Version", verList, false)
-	form.Append("Module", modList, false)
-	form.Append("Config File", cfbox, false)
+	cfform.Append("Path", cfbox, false)
 
-	return form
+	// launch button
+	launchButton := ui.NewButton("Launch Game")
+	launchButton.OnClicked(
+		func(b *ui.Button) {
+
+		},
+	)
+
+	// append to hbox
+	hbox.Append(dgroup, true)
+	hbox.Append(vmgroup, true)
+
+	vbox.Append(hbox, false)
+	vbox.Append(cfgroup, true)
+	vbox.Append(launchButton, false)
+
+	return vbox
 }
 
 func setupUI() {
@@ -244,9 +311,13 @@ func updateHome() {
 func loadConfig() {
 	ui.QueueMain(
 		func() {
+			// home page
+			widthEntry.SetText(fmt.Sprint(CONFIG_FILE.Width))
+			heightEntry.SetText(fmt.Sprint(CONFIG_FILE.Height))
+
 			// jre settings
-			jrePath.SetText(CONFIG_FILE.JRE)
-			jvmArgs.SetText(strings.Join(CONFIG_FILE.JVMArgs, "\n"))
+			jreEntry.SetText(CONFIG_FILE.JRE)
+			jargsEntry.SetText(strings.Join(CONFIG_FILE.JVMArgs, "\n"))
 
 			// memory settings
 			xmxSlider.SetValue(CONFIG_FILE.Memory.Xmx)
@@ -255,10 +326,10 @@ func loadConfig() {
 			xssSlider.SetValue(CONFIG_FILE.Memory.Xss)
 
 			// other settings
-			workingDir.SetText(CONFIG_FILE.WorkingDirectory)
-			gameDir.SetText(CONFIG_FILE.GameDirectory)
-			agents.SetText(strings.Join(CONFIG_FILE.JavaAgents, "\n"))
-			preJava.SetText(CONFIG_FILE.PreJava)
+			wdEntry.SetText(CONFIG_FILE.WorkingDirectory)
+			gdEntry.SetText(CONFIG_FILE.GameDirectory)
+			agentEntry.SetText(strings.Join(CONFIG_FILE.JavaAgents, "\n"))
+			pjEntry.SetText(CONFIG_FILE.PreJava)
 
 			var _env []string
 
@@ -266,8 +337,8 @@ func loadConfig() {
 				_env = append(_env, fmt.Sprintf("%s = %s", val.Key, val.Value))
 			}
 
-			envVars.SetReadOnly(true)
-			envVars.SetText(strings.Join(_env, "\n"))
+			envEntry.SetReadOnly(true)
+			envEntry.SetText(strings.Join(_env, "\n"))
 		},
 	)
 }
@@ -276,8 +347,8 @@ func saveConfig() {
 	ui.QueueMain(
 		func() {
 			// jre settings
-			CONFIG_FILE.JRE = jrePath.Text()
-			CONFIG_FILE.JVMArgs = strings.Split(jvmArgs.Text(), "\n")
+			CONFIG_FILE.JRE = jreEntry.Text()
+			CONFIG_FILE.JVMArgs = strings.Split(jargsEntry.Text(), "\n")
 
 			// memory settings
 			CONFIG_FILE.Memory.Xmx = xmxSlider.Value()
@@ -286,12 +357,12 @@ func saveConfig() {
 			CONFIG_FILE.Memory.Xss = xssSlider.Value()
 
 			// other settings
-			CONFIG_FILE.WorkingDirectory = workingDir.Text()
-			CONFIG_FILE.GameDirectory = gameDir.Text()
-			CONFIG_FILE.JavaAgents = strings.Split(agents.Text(), "\n")
-			CONFIG_FILE.PreJava = preJava.Text()
+			CONFIG_FILE.WorkingDirectory = wdEntry.Text()
+			CONFIG_FILE.GameDirectory = gdEntry.Text()
+			CONFIG_FILE.JavaAgents = strings.Split(agentEntry.Text(), "\n")
+			CONFIG_FILE.PreJava = pjEntry.Text()
 
-			CONFIG_FILE.SaveConfig(configFile.Text())
+			CONFIG_FILE.SaveConfig(cfgEntry.Text())
 		},
 	)
 }
