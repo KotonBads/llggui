@@ -1,11 +1,19 @@
 package main
 
 import (
+	"bytes"
 	"fmt"
+	"io"
+	"log"
+	"os"
+	"os/exec"
+	"strconv"
 	"strings"
+	"time"
 
 	"github.com/KotonBads/llggui/internal"
 	"github.com/KotonBads/llggui/utils"
+	"github.com/KotonBads/llgutils"
 	"github.com/andlabs/ui"
 	"github.com/pbnjay/memory"
 )
@@ -242,7 +250,7 @@ func HomePage(window *ui.Window) ui.Control {
 	launchButton := ui.NewButton("Launch Game")
 	launchButton.OnClicked(
 		func(b *ui.Button) {
-
+			go launchLogic()
 		},
 	)
 
@@ -341,6 +349,104 @@ func loadConfig() {
 			envEntry.SetText(strings.Join(_env, "\n"))
 		},
 	)
+}
+
+func launchLogic() {
+	// logging
+	timestamp := time.Now().Format("2006-01-02 15:04:05")
+
+	file, err := internal.CreateLog(fmt.Sprintf("launcherlogs/%s.log", timestamp))
+
+	if err != nil {
+		fmt.Printf("[WARN] Could not create a log file: %s", err)
+	} else {
+		log.SetOutput(file)
+	}
+
+	launchbody := llgutils.LaunchBody{
+		OS:      internal.CorrectedOS(),
+		Arch:    internal.CorrectedArch(),
+		Version: LC_VERSIONS[verList.Selected()],
+		Module:  LC_MODULES[modList.Selected()],
+	}
+
+	launchmeta, _ := launchbody.FetchLaunchMeta()
+	launchmeta.DownloadArtifacts(wdEntry.Text())
+	launchmeta.DownloadCosmetics(wdEntry.Text() + "/textures")
+
+	var (
+		classpath,
+		ichorClassPath,
+		external,
+		natives = launchmeta.SortFiles(wdEntry.Text())
+	)
+
+	log.Printf("[INFO] Extracting Natives to %s", wdEntry.Text()+"/natives")
+	for _, val := range natives {
+		llgutils.Unzip(val, wdEntry.Text()+"/natives")
+	}
+
+	CONFIG_FILE.SetEnv()
+
+	width, _ := strconv.Atoi(widthEntry.Text())
+	height, _ := strconv.Atoi(heightEntry.Text())
+
+	args := internal.MinecraftArgs{
+		BaseArgs: []string{"--add-modules",
+			"jdk.naming.dns",
+			"--add-exports",
+			"jdk.naming.dns/com.sun.jndi.dns=java.naming",
+			"-Djna.boot.library.path=" + wdEntry.Text() + "/natives",
+			"-Djava.library.path=" + wdEntry.Text() + "/natives",
+			"-Dlog4j2.formatMsgNoLookups=true",
+			"--add-opens",
+			"java.base/java.io=ALL-UNNAMED",
+			"-Dichor.prebakeClasses=false",
+			"-Dlunar.webosr.url=file:index.html"},
+		JVMArgs:            strings.Split(jargsEntry.Text(), "\n"),
+		Classpath:          classpath,
+		IchorClassPath:     ichorClassPath,
+		IchorExternalFiles: external,
+		JavaAgents:         strings.Split(agentEntry.Text(), "\n"),
+		RAM: internal.Memory{
+			Xmx: xmxSlider.Value(),
+			Xms: xmsSlider.Value(),
+			Xmn: xmnSlider.Value(),
+			Xss: xssSlider.Value(),
+		},
+		Width:        width,
+		Height:       height,
+		MainClass:    launchmeta.LaunchTypeData.MainClass,
+		Version:      launchbody.Version,
+		AssetIndex:   internal.AssetIndex(launchbody.Version),
+		GameDir:      gdEntry.Text(),
+		TexturesDir:  wdEntry.Text() + "/textures",
+		WebOSRDir:    wdEntry.Text() + "/natives",
+		WorkingDir:   wdEntry.Text(),
+		ClassPathDir: wdEntry.Text(),
+		Fullscreen:   CONFIG_FILE.Fullscreen,
+	}
+
+	program, input, sep := internal.ShellCommand()
+
+	cmd := exec.Command(program, input, fmt.Sprintf("%s %s", jreEntry.Text(), args.CompileArgs(sep)))
+
+	if len(pjEntry.Text()) != 0 {
+		cmd = exec.Command(program, input, fmt.Sprintf("%s %s %s", pjEntry.Text(), jreEntry.Text(), args.CompileArgs(sep)))
+	}
+
+	var stdBuffer bytes.Buffer
+	mw := io.MultiWriter(os.Stdout, &stdBuffer)
+
+	cmd.Stdout = mw
+	cmd.Stderr = mw
+
+	fmt.Printf("\nExecuting: \n%s\n\n", strings.Join(cmd.Args, " "))
+	log.Printf("[LAUNCH] Full cmdline: %s", strings.Join(cmd.Args, " "))
+
+	if err := cmd.Run(); err != nil {
+		panic(err)
+	}
 }
 
 func saveConfig() {
