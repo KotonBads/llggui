@@ -1,3 +1,5 @@
+github.com/KotonBads/llgutils v1.4.0 h1:Q8ZboA4Dgr4fCQTEbwC2nK9HJltAEayqnaN2FLDDbs0=
+github.com/KotonBads/llgutils v1.4.0/go.mod h1:qdv7HL7skiJncadg5HIA4cqX/EEtZIyOdNmGa9rcirY=
 github.com/andlabs/ui v0.0.0-20200610043537-70a69d6ae31e h1:wSQCJiig/QkoUnpvelSPbLiZNWvh2yMqQTQvIQqSUkU=
 github.com/andlabs/ui v0.0.0-20200610043537-70a69d6ae31e/go.mod h1:5G2EjwzgZUPnnReoKvPWVneT8APYbyKkihDVAHUi0II=
 github.com/pbnjay/memory v0.0.0-20210728143218-7b4eea64cf58 h1:onHthvaw9LFnH4t2DcNVpwGmV9E1BkGknEliJkfwQj0=
