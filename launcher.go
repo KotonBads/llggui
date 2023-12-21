@@ -48,11 +48,11 @@ var (
 	}
 
 	// other settings
-	agentEntry *ui.MultilineEntry
-	envEntry   *ui.MultilineEntry
-	wdEntry    *ui.Entry
-	gdEntry    *ui.Entry
-	pjEntry    *ui.Entry
+	javaAgentEntry  *ui.MultilineEntry
+	envVarEntry     *ui.MultilineEntry
+	workingDirEntry *ui.Entry
+	gameDirEntry    *ui.Entry
+	preJavaEntry    *ui.Entry
 
 	// memory settings
 	MAX_MEMORY_MIB = int(memory.TotalMemory() / 1024 / 1024)
@@ -62,8 +62,8 @@ var (
 	xssSlider      *ui.Slider
 
 	// jre settings
-	jreEntry   *ui.Entry
-	jargsEntry *ui.MultilineEntry
+	jreEntry     *ui.Entry
+	jvmArgsEntry *ui.MultilineEntry
 
 	// home page
 	verList     *ui.Combobox
@@ -91,28 +91,28 @@ func OtherSettings(window *ui.Window) ui.Control {
 	pjbox.SetPadded(true)
 
 	// vars
-	agentEntry = ui.NewMultilineEntry()
-	envEntry = ui.NewMultilineEntry()
-	wdEntry = ui.NewEntry()
-	gdEntry = ui.NewEntry()
-	pjEntry = ui.NewEntry()
+	javaAgentEntry = ui.NewMultilineEntry()
+	envVarEntry = ui.NewMultilineEntry()
+	workingDirEntry = ui.NewEntry()
+	gameDirEntry = ui.NewEntry()
+	preJavaEntry = ui.NewEntry()
 
 	// entries with pickers
-	wdbox.Append(wdEntry, true)
-	wdbox.Append(utils.PickerButton(window, wdEntry), false)
+	wdbox.Append(workingDirEntry, true)
+	wdbox.Append(utils.PickerButton(window, workingDirEntry), false)
 
-	gdbox.Append(gdEntry, true)
-	gdbox.Append(utils.PickerButton(window, gdEntry), false)
+	gdbox.Append(gameDirEntry, true)
+	gdbox.Append(utils.PickerButton(window, gameDirEntry), false)
 
-	pjbox.Append(pjEntry, true)
-	pjbox.Append(utils.PickerButton(window, pjEntry), false)
+	pjbox.Append(preJavaEntry, true)
+	pjbox.Append(utils.PickerButton(window, preJavaEntry), false)
 
 	// append controls
 	form.Append("Game Directory", gdbox, false)
 	form.Append("Working Directory", wdbox, false)
 	form.Append("Pre-Java", pjbox, false)
-	form.Append("Java Agents", agentEntry, true)
-	form.Append("Environment Variables", envEntry, true)
+	form.Append("Java Agents", javaAgentEntry, true)
+	form.Append("Environment Variables", envVarEntry, true)
 
 	return form
 }
@@ -165,9 +165,9 @@ func JRESettings(window *ui.Window) ui.Control {
 	hbox.Append(openPicker, false)
 
 	// jvm args
-	jargsEntry = ui.NewMultilineEntry()
+	jvmArgsEntry = ui.NewMultilineEntry()
 
-	form.Append("Arguments", jargsEntry, true)
+	form.Append("Arguments", jvmArgsEntry, true)
 
 	return group
 }
@@ -325,7 +325,7 @@ func loadConfig() {
 
 			// jre settings
 			jreEntry.SetText(CONFIG_FILE.JRE)
-			jargsEntry.SetText(strings.Join(CONFIG_FILE.JVMArgs, "\n"))
+			jvmArgsEntry.SetText(strings.Join(CONFIG_FILE.JVMArgs, "\n"))
 
 			// memory settings
 			xmxSlider.SetValue(CONFIG_FILE.Memory.Xmx)
@@ -334,10 +334,10 @@ func loadConfig() {
 			xssSlider.SetValue(CONFIG_FILE.Memory.Xss)
 
 			// other settings
-			wdEntry.SetText(CONFIG_FILE.WorkingDirectory)
-			gdEntry.SetText(CONFIG_FILE.GameDirectory)
-			agentEntry.SetText(strings.Join(CONFIG_FILE.JavaAgents, "\n"))
-			pjEntry.SetText(CONFIG_FILE.PreJava)
+			workingDirEntry.SetText(CONFIG_FILE.WorkingDirectory)
+			gameDirEntry.SetText(CONFIG_FILE.GameDirectory)
+			javaAgentEntry.SetText(strings.Join(CONFIG_FILE.JavaAgents, "\n"))
+			preJavaEntry.SetText(CONFIG_FILE.PreJava)
 
 			var _env []string
 
@@ -345,8 +345,8 @@ func loadConfig() {
 				_env = append(_env, fmt.Sprintf("%s = %s", val.Key, val.Value))
 			}
 
-			envEntry.SetReadOnly(true)
-			envEntry.SetText(strings.Join(_env, "\n"))
+			envVarEntry.SetReadOnly(true)
+			envVarEntry.SetText(strings.Join(_env, "\n"))
 		},
 	)
 }
@@ -371,19 +371,19 @@ func launchLogic() {
 	}
 
 	launchmeta, _ := launchbody.FetchLaunchMeta()
-	launchmeta.DownloadArtifacts(wdEntry.Text())
-	launchmeta.DownloadCosmetics(wdEntry.Text() + "/textures")
+	launchmeta.DownloadArtifacts(workingDirEntry.Text())
+	launchmeta.DownloadCosmetics(workingDirEntry.Text() + "/textures")
 
 	var (
 		classpath,
 		ichorClassPath,
 		external,
-		natives = launchmeta.SortFiles(wdEntry.Text())
+		natives = launchmeta.SortFiles(workingDirEntry.Text())
 	)
 
-	log.Printf("[INFO] Extracting Natives to %s", wdEntry.Text()+"/natives")
+	log.Printf("[INFO] Extracting Natives to %s", workingDirEntry.Text()+"/natives")
 	for _, val := range natives {
-		llgutils.Unzip(val, wdEntry.Text()+"/natives")
+		llgutils.Unzip(val, workingDirEntry.Text()+"/natives")
 	}
 
 	CONFIG_FILE.SetEnv()
@@ -396,18 +396,18 @@ func launchLogic() {
 			"jdk.naming.dns",
 			"--add-exports",
 			"jdk.naming.dns/com.sun.jndi.dns=java.naming",
-			"-Djna.boot.library.path=" + wdEntry.Text() + "/natives",
-			"-Djava.library.path=" + wdEntry.Text() + "/natives",
+			"-Djna.boot.library.path=" + workingDirEntry.Text() + "/natives",
+			"-Djava.library.path=" + workingDirEntry.Text() + "/natives",
 			"-Dlog4j2.formatMsgNoLookups=true",
 			"--add-opens",
 			"java.base/java.io=ALL-UNNAMED",
 			"-Dichor.prebakeClasses=false",
 			"-Dlunar.webosr.url=file:index.html"},
-		JVMArgs:            strings.Split(jargsEntry.Text(), "\n"),
+		JVMArgs:            strings.Split(jvmArgsEntry.Text(), "\n"),
 		Classpath:          classpath,
 		IchorClassPath:     ichorClassPath,
 		IchorExternalFiles: external,
-		JavaAgents:         strings.Split(agentEntry.Text(), "\n"),
+		JavaAgents:         strings.Split(javaAgentEntry.Text(), "\n"),
 		RAM: internal.Memory{
 			Xmx: xmxSlider.Value(),
 			Xms: xmsSlider.Value(),
@@ -419,11 +419,11 @@ func launchLogic() {
 		MainClass:    launchmeta.LaunchTypeData.MainClass,
 		Version:      launchbody.Version,
 		AssetIndex:   internal.AssetIndex(launchbody.Version),
-		GameDir:      gdEntry.Text(),
-		TexturesDir:  wdEntry.Text() + "/textures",
-		WebOSRDir:    wdEntry.Text() + "/natives",
-		WorkingDir:   wdEntry.Text(),
-		ClassPathDir: wdEntry.Text(),
+		GameDir:      gameDirEntry.Text(),
+		TexturesDir:  workingDirEntry.Text() + "/textures",
+		WebOSRDir:    workingDirEntry.Text() + "/natives",
+		WorkingDir:   workingDirEntry.Text(),
+		ClassPathDir: workingDirEntry.Text(),
 		Fullscreen:   CONFIG_FILE.Fullscreen,
 	}
 
@@ -431,8 +431,8 @@ func launchLogic() {
 
 	cmd := exec.Command(program, input, fmt.Sprintf("%s %s", jreEntry.Text(), args.CompileArgs(sep)))
 
-	if len(pjEntry.Text()) != 0 {
-		cmd = exec.Command(program, input, fmt.Sprintf("%s %s %s", pjEntry.Text(), jreEntry.Text(), args.CompileArgs(sep)))
+	if len(preJavaEntry.Text()) != 0 {
+		cmd = exec.Command(program, input, fmt.Sprintf("%s %s %s", preJavaEntry.Text(), jreEntry.Text(), args.CompileArgs(sep)))
 	}
 
 	var stdBuffer bytes.Buffer
@@ -454,7 +454,7 @@ func saveConfig() {
 		func() {
 			// jre settings
 			CONFIG_FILE.JRE = jreEntry.Text()
-			CONFIG_FILE.JVMArgs = strings.Split(jargsEntry.Text(), "\n")
+			CONFIG_FILE.JVMArgs = strings.Split(jvmArgsEntry.Text(), "\n")
 
 			// memory settings
 			CONFIG_FILE.Memory.Xmx = xmxSlider.Value()
@@ -463,10 +463,10 @@ func saveConfig() {
 			CONFIG_FILE.Memory.Xss = xssSlider.Value()
 
 			// other settings
-			CONFIG_FILE.WorkingDirectory = wdEntry.Text()
-			CONFIG_FILE.GameDirectory = gdEntry.Text()
-			CONFIG_FILE.JavaAgents = strings.Split(agentEntry.Text(), "\n")
-			CONFIG_FILE.PreJava = pjEntry.Text()
+			CONFIG_FILE.WorkingDirectory = workingDirEntry.Text()
+			CONFIG_FILE.GameDirectory = gameDirEntry.Text()
+			CONFIG_FILE.JavaAgents = strings.Split(javaAgentEntry.Text(), "\n")
+			CONFIG_FILE.PreJava = preJavaEntry.Text()
 
 			CONFIG_FILE.SaveConfig(cfgEntry.Text())
 		},
