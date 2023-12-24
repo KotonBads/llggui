@@ -17,6 +17,9 @@ func (args MinecraftArgs) CompileArgs(sep string) string {
 	// special case for java agents
 	if len(args.JavaAgents) != 0 {
 		for _, val := range args.JavaAgents {
+			if val == "" {
+				break
+			}
 			final = append(final, "-javaagent:"+val)
 		}
 	}
