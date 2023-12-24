@@ -117,7 +117,7 @@ func OtherSettings(window *ui.Window) ui.Control {
 	return form
 }
 
-func MemorySettings(window *ui.Window) ui.Control {
+func MemorySettings() ui.Control {
 	// setup form
 	group := ui.NewGroup("Memory Allocations")
 	group.SetMargined(true)
@@ -285,7 +285,7 @@ func setupUI() {
 
 	tab.Append("Home", HomePage(app))
 	tab.Append("JRE", JRESettings(app))
-	tab.Append("Memory", MemorySettings(app))
+	tab.Append("Memory", MemorySettings())
 	tab.Append("Others", OtherSettings(app))
 	tab.SetMargined(0, true)
 	tab.SetMargined(1, true)
